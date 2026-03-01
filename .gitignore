@@ -1,0 +1,21 @@
+app/node_modules
+app/.DS_Store
+app/dist
+app/dist-ssr
+app/*.local
+app/.env
+app/.nitro
+app/.tanstack
+app/.wrangler
+app/.output
+app/.vinxi
+app/__unconfig*
+app/todos.json
+
+# api
+api/node_modules
+api/dist
+api/generated
+api/.env
+api/.env.*
+api/*.tsbuildinfo
