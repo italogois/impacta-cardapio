@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { fetchItens, type Item } from '../lib/api'
+import { useCart } from '../lib/cart'
 
 export const Route = createFileRoute('/')({ component: Cardapio })
 
@@ -8,6 +9,7 @@ function Cardapio() {
   const [itens, setItens] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
+  const { addItem } = useCart()
 
   useEffect(() => {
     fetchItens()
@@ -67,6 +69,13 @@ function Cardapio() {
                       currency: 'BRL',
                     })}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => addItem(item)}
+                    className="mt-4 w-full rounded-xl bg-[var(--lagoon-deep)] py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  >
+                    Adicionar
+                  </button>
                 </div>
               </article>
             ))}

@@ -46,3 +46,50 @@ export async function deleteItem(id: number): Promise<void> {
   })
   if (!res.ok) throw new Error('Erro ao excluir item')
 }
+
+export type FormaPagamento = 'dinheiro' | 'credito' | 'debito' | 'pix'
+
+export interface PedidoItemInput {
+  itemId: number
+  quantidade: number
+}
+
+export interface PedidoInput {
+  nomeCliente: string
+  formaPagamento: FormaPagamento
+  itens: PedidoItemInput[]
+}
+
+export interface PedidoItemResponse {
+  id: number
+  pedidoId: number
+  itemId: number
+  quantidade: number
+  valorUnit: number
+  item?: Item
+}
+
+export interface Pedido {
+  id: number
+  nomeCliente: string
+  total: number
+  formaPagamento: string
+  criadoEm: string
+  itens: PedidoItemResponse[]
+}
+
+export async function fetchPedidos(): Promise<Pedido[]> {
+  const res = await fetch(`${BASE_URL}/pedidos`)
+  if (!res.ok) throw new Error('Erro ao buscar pedidos')
+  return res.json()
+}
+
+export async function criarPedido(data: PedidoInput): Promise<Pedido> {
+  const res = await fetch(`${BASE_URL}/pedidos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Erro ao criar pedido')
+  return res.json()
+}

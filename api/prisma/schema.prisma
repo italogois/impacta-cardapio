@@ -8,10 +8,30 @@ datasource db {
 }
 
 model Item {
-  id        Int    @id @default(autoincrement())
-  nome      String
-  descricao String
-  imagem    String
-  valor     Float
-  categoria String
+  id          Int          @id @default(autoincrement())
+  nome        String
+  descricao   String
+  imagem      String
+  valor       Float
+  categoria   String
+  pedidoItens PedidoItem[]
+}
+
+model Pedido {
+  id             Int          @id @default(autoincrement())
+  nomeCliente    String
+  total          Float
+  formaPagamento String
+  criadoEm       DateTime     @default(now())
+  itens          PedidoItem[]
+}
+
+model PedidoItem {
+  id         Int    @id @default(autoincrement())
+  pedidoId   Int
+  itemId     Int
+  quantidade Int
+  valorUnit  Float
+  pedido     Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  item       Item   @relation(fields: [itemId], references: [id])
 }

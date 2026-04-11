@@ -1,6 +1,9 @@
 import { Link } from '@tanstack/react-router'
+import { ShoppingCart } from 'lucide-react'
+import { useCart } from '../lib/cart'
 
 export default function Header() {
+  const { count } = useCart()
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
       <nav className="page-wrap flex items-center gap-x-4 py-3 sm:py-4">
@@ -28,6 +31,26 @@ export default function Header() {
             activeProps={{ className: 'nav-link is-active' }}
           >
             Produtos
+          </Link>
+          <Link
+            to="/pedidos"
+            className="nav-link"
+            activeProps={{ className: 'nav-link is-active' }}
+          >
+            Pedidos
+          </Link>
+          <Link
+            to="/checkout"
+            className="nav-link relative inline-flex items-center gap-1.5"
+            activeProps={{ className: 'nav-link is-active' }}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Carrinho
+            {count > 0 && (
+              <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--lagoon-deep)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                {count}
+              </span>
+            )}
           </Link>
         </div>
       </nav>
