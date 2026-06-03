@@ -12,6 +12,13 @@ const LABEL_PAGAMENTO: Record<string, string> = {
   dinheiro: 'Dinheiro',
 }
 
+function formatarBRL(valor: number) {
+  return valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+
 function Pedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,10 +52,7 @@ function Pedidos() {
 
       <div className="flex flex-col gap-4">
         {pedidos.map((pedido) => (
-          <article
-            key={pedido.id}
-            className="island-shell rounded-2xl p-5"
-          >
+          <article key={pedido.id} className="island-shell rounded-2xl p-5">
             <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div>
                 <p className="text-base font-semibold text-[var(--sea-ink)]">
@@ -58,16 +62,25 @@ function Pedidos() {
                   Pedido #{pedido.id} &middot;{' '}
                   {new Date(pedido.criadoEm).toLocaleString('pt-BR')}
                 </p>
+                {pedido.cupom?.codigo && (
+                  <p className="mt-2 inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                    Cupom aplicado: {pedido.cupom.codigo}
+                  </p>
+                )}
               </div>
               <div className="text-right">
+                {pedido.cupom?.codigo && pedido.desconto > 0 && (
+                  <p className="mb-1 text-xs text-[var(--sea-ink-soft)]">
+                    Subtotal {formatarBRL(pedido.subtotal)} · Desconto -
+                    {formatarBRL(pedido.desconto)}
+                  </p>
+                )}
                 <p className="text-lg font-bold text-[var(--lagoon-deep)]">
-                  {pedido.total.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  })}
+                  {formatarBRL(pedido.total)}
                 </p>
                 <p className="text-xs text-[var(--sea-ink-soft)]">
-                  {LABEL_PAGAMENTO[pedido.formaPagamento] ?? pedido.formaPagamento}
+                  {LABEL_PAGAMENTO[pedido.formaPagamento] ??
+                    pedido.formaPagamento}
                 </p>
               </div>
             </div>

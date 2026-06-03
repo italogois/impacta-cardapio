@@ -1,9 +1,10 @@
-import { FastifyInstance } from "fastify";
-import { PrismaClient } from "../../generated/prisma/client.js";
 import {
   createPedidoSchema,
   pedidoParamsSchema,
 } from "../schemas/pedido.schema.js";
+
+import { FastifyInstance } from "fastify";
+import { PrismaClient } from "../../generated/prisma/client.js";
 
 interface PedidoItemInput {
   itemId: number;
@@ -29,6 +30,7 @@ export async function pedidoRoutes(
     { schema: createPedidoSchema },
     async (request, reply) => {
       const { nomeCliente, formaPagamento, itens } = request.body;
+      const codigoCupom = (request.body as any).codigoCupom;
 
       const itemIds = itens.map((i) => i.itemId);
       const itensDb = await prisma.item.findMany({
@@ -43,11 +45,11 @@ export async function pedidoRoutes(
 
       const itensDbById = new Map(itensDb.map((i) => [i.id, i]));
 
-      let total = 0;
+      let subtotal = 0;
       const linhas = itens.map((linha) => {
         const itemDb = itensDbById.get(linha.itemId)!;
-        const subtotal = itemDb.valor * linha.quantidade;
-        total += subtotal;
+        const linhaSubtotal = itemDb.valor * linha.quantidade;
+        subtotal += linhaSubtotal;
         return {
           itemId: linha.itemId,
           quantidade: linha.quantidade,
@@ -55,11 +57,63 @@ export async function pedidoRoutes(
         };
       });
 
+      if (codigoCupom) {
+        const result = await prisma.$transaction(async (tx) => {
+          const cupom = await tx.cupom.findUnique({
+            where: { codigo: codigoCupom },
+            include: { _count: { select: { pedidos: true } } },
+          });
+
+          if (!cupom) {
+            return reply.status(400).send({ message: "Cupom não encontrado" });
+          }
+          if (!cupom.ativo) {
+            return reply.status(400).send({ message: "Cupom inativo" });
+          }
+          if (cupom.validoAte && new Date(cupom.validoAte) < new Date()) {
+            return reply.status(400).send({ message: "Cupom expirado" });
+          }
+          if (cupom._count && cupom._count.pedidos >= cupom.limiteUso) {
+            return reply.status(400).send({ message: "Cupom esgotado" });
+          }
+
+          let desconto = 0;
+          if (cupom.tipoDesconto === "percentual") {
+            desconto = (subtotal * cupom.valorDesconto) / 100;
+          } else {
+            desconto = cupom.valorDesconto;
+          }
+          if (desconto > subtotal) desconto = subtotal;
+
+          const total = subtotal - desconto;
+
+          const pedido = await tx.pedido.create({
+            data: {
+              nomeCliente,
+              formaPagamento,
+              subtotal,
+              desconto,
+              total,
+              cupomId: cupom.id,
+              itens: { create: linhas },
+            },
+            include: { itens: true },
+          });
+
+          return pedido;
+        });
+
+        if (!result || (result as any).statusCode) return;
+        return reply.status(201).send(result);
+      }
+
       const pedido = await prisma.pedido.create({
         data: {
           nomeCliente,
           formaPagamento,
-          total,
+          subtotal,
+          desconto: 0,
+          total: subtotal,
           itens: { create: linhas },
         },
         include: { itens: true },
@@ -71,7 +125,7 @@ export async function pedidoRoutes(
 
   app.get("/pedidos", async () => {
     const pedidos = await prisma.pedido.findMany({
-      include: { itens: { include: { item: true } } },
+      include: { itens: { include: { item: true } }, cupom: { select: { codigo: true } } },
       orderBy: { criadoEm: "desc" },
     });
     return pedidos;
@@ -83,7 +137,7 @@ export async function pedidoRoutes(
     async (request, reply) => {
       const pedido = await prisma.pedido.findUnique({
         where: { id: request.params.id },
-        include: { itens: { include: { item: true } } },
+        include: { itens: { include: { item: true } }, cupom: { select: { codigo: true } } },
       });
 
       if (!pedido) {

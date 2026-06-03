@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Minus, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { criarPedido, type FormaPagamento } from '../lib/api'
+import { criarPedido, validarCupom, type FormaPagamento } from '../lib/api'
 import { useCart } from '../lib/cart'
 
 export const Route = createFileRoute('/checkout')({ component: Checkout })
@@ -30,6 +30,9 @@ function Checkout() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const [codigoCupom, setCodigoCupom] = useState('')
+  const [cupomAplicado, setCupomAplicado] = useState<any | null>(null)
+  const [erroCupom, setErroCupom] = useState('')
 
   const carrinhoVazio = items.length === 0
   const nomeValido = nomeCliente.trim().length > 0
@@ -40,14 +43,18 @@ function Checkout() {
     setSucesso('')
     setEnviando(true)
     try {
-      const pedido = await criarPedido({
+      const payload: any = {
         nomeCliente: nomeCliente.trim(),
         formaPagamento,
         itens: items.map((ci) => ({
           itemId: ci.itemId,
           quantidade: ci.quantidade,
         })),
-      })
+      }
+      if (cupomAplicado?.valido && cupomAplicado.cupom)
+        payload.codigoCupom = cupomAplicado.cupom.codigo
+
+      const pedido = await criarPedido(payload)
       setSucesso(`Pedido #${pedido.id} realizado com sucesso!`)
       clear()
       setTimeout(() => navigate({ to: '/' }), 1500)
@@ -179,12 +186,112 @@ function Checkout() {
             </div>
 
             <div className="flex items-center justify-between border-t border-[var(--line)] pt-4">
-              <span className="text-sm font-semibold text-[var(--sea-ink-soft)]">
-                Total
-              </span>
-              <span className="text-xl font-bold text-[var(--lagoon-deep)]">
-                {formatarBRL(total)}
-              </span>
+              <div className="space-y-2 w-full">
+                <div>
+                  <label className="text-sm font-semibold text-[var(--sea-ink-soft)]">
+                    Cupom
+                  </label>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      value={codigoCupom}
+                      onChange={(e) => setCodigoCupom(e.target.value)}
+                      placeholder="Código do cupom"
+                      className="flex-1 rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm text-[var(--sea-ink)]"
+                    />
+                    {!cupomAplicado && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setErroCupom('')
+                          try {
+                            const codigo = codigoCupom.trim().toUpperCase()
+                            if (!codigo) {
+                              setCupomAplicado(null)
+                              setErroCupom('Informe um código de cupom')
+                              return
+                            }
+
+                            const data = await validarCupom(codigo)
+                            if (!data.valido) {
+                              setCupomAplicado(null)
+                              setErroCupom(data.motivo || 'Cupom inválido')
+                            } else {
+                              setCupomAplicado(data)
+                              setCodigoCupom(codigo)
+                            }
+                          } catch {
+                            setErroCupom('Erro ao validar cupom')
+                          }
+                        }}
+                        className="rounded-full border border-gray-300 bg-black px-4 py-2 text-sm font-semibold text-white"
+                      >
+                        Aplicar
+                      </button>
+                    )}
+                    {cupomAplicado && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCupomAplicado(null)
+                          setCodigoCupom('')
+                          setErroCupom('')
+                        }}
+                        className="rounded-full border border-[var(--line)] px-3 py-2 text-sm font-semibold"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                  {erroCupom && (
+                    <p className="text-sm text-red-500 mt-2">{erroCupom}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[var(--sea-ink-soft)]">
+                    Subtotal
+                  </span>
+                  <span className="text-sm text-[var(--sea-ink)]">
+                    {formatarBRL(total)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[var(--sea-ink-soft)]">
+                    Desconto
+                  </span>
+                  <span className="text-sm text-[var(--sea-ink)]">
+                    {(() => {
+                      if (!cupomAplicado || !cupomAplicado.valido)
+                        return formatarBRL(0)
+                      const c = cupomAplicado.cupom
+                      let desconto = 0
+                      if (c.tipoDesconto === 'percentual')
+                        desconto = (total * c.valorDesconto) / 100
+                      else desconto = c.valorDesconto
+                      if (desconto > total) desconto = total
+                      return `- ${formatarBRL(desconto)}`
+                    })()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[var(--sea-ink-soft)]">
+                    Total
+                  </span>
+                  <span className="text-xl font-bold text-[var(--lagoon-deep)]">
+                    {(() => {
+                      let desconto = 0
+                      if (cupomAplicado && cupomAplicado.valido) {
+                        const c = cupomAplicado.cupom
+                        if (c.tipoDesconto === 'percentual')
+                          desconto = (total * c.valorDesconto) / 100
+                        else desconto = c.valorDesconto
+                        if (desconto > total) desconto = total
+                      }
+                      return formatarBRL(total - desconto)
+                    })()}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {erro && <p className="text-sm text-red-500">{erro}</p>}

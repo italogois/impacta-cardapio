@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as PedidosRouteImport } from './routes/pedidos'
+import { Route as CuponsRouteImport } from './routes/cupons'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CuponsIdRouteImport } from './routes/cupons.$id'
 
 const ProdutosRoute = ProdutosRouteImport.update({
   id: '/produtos',
@@ -23,6 +25,11 @@ const ProdutosRoute = ProdutosRouteImport.update({
 const PedidosRoute = PedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuponsRoute = CuponsRouteImport.update({
+  id: '/cupons',
+  path: '/cupons',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -40,41 +47,75 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CuponsIdRoute = CuponsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CuponsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
+  '/cupons': typeof CuponsRouteWithChildren
   '/pedidos': typeof PedidosRoute
   '/produtos': typeof ProdutosRoute
+  '/cupons/$id': typeof CuponsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
+  '/cupons': typeof CuponsRouteWithChildren
   '/pedidos': typeof PedidosRoute
   '/produtos': typeof ProdutosRoute
+  '/cupons/$id': typeof CuponsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
+  '/cupons': typeof CuponsRouteWithChildren
   '/pedidos': typeof PedidosRoute
   '/produtos': typeof ProdutosRoute
+  '/cupons/$id': typeof CuponsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/checkout' | '/pedidos' | '/produtos'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/checkout'
+    | '/cupons'
+    | '/pedidos'
+    | '/produtos'
+    | '/cupons/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/checkout' | '/pedidos' | '/produtos'
-  id: '__root__' | '/' | '/about' | '/checkout' | '/pedidos' | '/produtos'
+  to:
+    | '/'
+    | '/about'
+    | '/checkout'
+    | '/cupons'
+    | '/pedidos'
+    | '/produtos'
+    | '/cupons/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/checkout'
+    | '/cupons'
+    | '/pedidos'
+    | '/produtos'
+    | '/cupons/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   CheckoutRoute: typeof CheckoutRoute
+  CuponsRoute: typeof CuponsRouteWithChildren
   PedidosRoute: typeof PedidosRoute
   ProdutosRoute: typeof ProdutosRoute
 }
@@ -93,6 +134,13 @@ declare module '@tanstack/react-router' {
       path: '/pedidos'
       fullPath: '/pedidos'
       preLoaderRoute: typeof PedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cupons': {
+      id: '/cupons'
+      path: '/cupons'
+      fullPath: '/cupons'
+      preLoaderRoute: typeof CuponsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -116,13 +164,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cupons/$id': {
+      id: '/cupons/$id'
+      path: '/$id'
+      fullPath: '/cupons/$id'
+      preLoaderRoute: typeof CuponsIdRouteImport
+      parentRoute: typeof CuponsRoute
+    }
   }
 }
+
+interface CuponsRouteChildren {
+  CuponsIdRoute: typeof CuponsIdRoute
+}
+
+const CuponsRouteChildren: CuponsRouteChildren = {
+  CuponsIdRoute: CuponsIdRoute,
+}
+
+const CuponsRouteWithChildren =
+  CuponsRoute._addFileChildren(CuponsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CheckoutRoute: CheckoutRoute,
+  CuponsRoute: CuponsRouteWithChildren,
   PedidosRoute: PedidosRoute,
   ProdutosRoute: ProdutosRoute,
 }

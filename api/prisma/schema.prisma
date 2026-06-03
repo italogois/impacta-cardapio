@@ -20,10 +20,27 @@ model Item {
 model Pedido {
   id             Int          @id @default(autoincrement())
   nomeCliente    String
+  subtotal       Float
+  desconto       Float        @default(0)
   total          Float
   formaPagamento String
+  cupomId        Int?
+  cupom          Cupom?       @relation(fields: [cupomId], references: [id])
   criadoEm       DateTime     @default(now())
   itens          PedidoItem[]
+}
+
+model Cupom {
+  id             Int       @id @default(autoincrement())
+  codigo         String    @unique
+  descricao      String
+  tipoDesconto   String
+  valorDesconto  Float
+  limiteUso      Int
+  validoAte      DateTime?
+  ativo          Boolean   @default(true)
+  criadoEm       DateTime  @default(now())
+  pedidos        Pedido[]
 }
 
 model PedidoItem {

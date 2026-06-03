@@ -8,6 +8,7 @@ export const createPedidoSchema = {
         type: "string",
         enum: ["dinheiro", "credito", "debito", "pix"],
       },
+      codigoCupom: { type: "string" },
       itens: {
         type: "array",
         minItems: 1,
