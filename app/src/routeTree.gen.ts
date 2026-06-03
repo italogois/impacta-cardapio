@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RelatorioVendasRouteImport } from './routes/relatorio-vendas'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as PedidosRouteImport } from './routes/pedidos'
 import { Route as CuponsRouteImport } from './routes/cupons'
@@ -17,6 +18,11 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CuponsIdRouteImport } from './routes/cupons.$id'
 
+const RelatorioVendasRoute = RelatorioVendasRouteImport.update({
+  id: '/relatorio-vendas',
+  path: '/relatorio-vendas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProdutosRoute = ProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/cupons': typeof CuponsRouteWithChildren
   '/pedidos': typeof PedidosRoute
   '/produtos': typeof ProdutosRoute
+  '/relatorio-vendas': typeof RelatorioVendasRoute
   '/cupons/$id': typeof CuponsIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/cupons': typeof CuponsRouteWithChildren
   '/pedidos': typeof PedidosRoute
   '/produtos': typeof ProdutosRoute
+  '/relatorio-vendas': typeof RelatorioVendasRoute
   '/cupons/$id': typeof CuponsIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/cupons': typeof CuponsRouteWithChildren
   '/pedidos': typeof PedidosRoute
   '/produtos': typeof ProdutosRoute
+  '/relatorio-vendas': typeof RelatorioVendasRoute
   '/cupons/$id': typeof CuponsIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/cupons'
     | '/pedidos'
     | '/produtos'
+    | '/relatorio-vendas'
     | '/cupons/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/cupons'
     | '/pedidos'
     | '/produtos'
+    | '/relatorio-vendas'
     | '/cupons/$id'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/cupons'
     | '/pedidos'
     | '/produtos'
+    | '/relatorio-vendas'
     | '/cupons/$id'
   fileRoutesById: FileRoutesById
 }
@@ -118,10 +130,18 @@ export interface RootRouteChildren {
   CuponsRoute: typeof CuponsRouteWithChildren
   PedidosRoute: typeof PedidosRoute
   ProdutosRoute: typeof ProdutosRoute
+  RelatorioVendasRoute: typeof RelatorioVendasRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/relatorio-vendas': {
+      id: '/relatorio-vendas'
+      path: '/relatorio-vendas'
+      fullPath: '/relatorio-vendas'
+      preLoaderRoute: typeof RelatorioVendasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/produtos': {
       id: '/produtos'
       path: '/produtos'
@@ -192,6 +212,7 @@ const rootRouteChildren: RootRouteChildren = {
   CuponsRoute: CuponsRouteWithChildren,
   PedidosRoute: PedidosRoute,
   ProdutosRoute: ProdutosRoute,
+  RelatorioVendasRoute: RelatorioVendasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

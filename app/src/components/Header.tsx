@@ -47,6 +47,13 @@ export default function Header() {
             Pedidos
           </Link>
           <Link
+            to="/relatorio-vendas"
+            className="nav-link"
+            activeProps={{ className: 'nav-link is-active' }}
+          >
+            Relatório de Vendas
+          </Link>
+          <Link
             to="/checkout"
             className="nav-link relative inline-flex items-center gap-1.5"
             activeProps={{ className: 'nav-link is-active' }}
